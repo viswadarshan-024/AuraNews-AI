@@ -1,0 +1,7 @@
+{
+  "name": "AuraNews",
+  "description": "Intelligent multilingual news summarization, explanation, and voice interaction platform.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
