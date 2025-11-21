@@ -6,9 +6,10 @@ import { Bookmark, LayoutGrid } from 'lucide-react';
 
 interface SavedNewsProps {
   userName: string;
+  onArticleSelect: (article: NewsArticle) => void;
 }
 
-const SavedNews: React.FC<SavedNewsProps> = ({ userName }) => {
+const SavedNews: React.FC<SavedNewsProps> = ({ userName, onArticleSelect }) => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [audioContext] = useState(() => new (window.AudioContext || (window as any).webkitAudioContext)());
   const [playingAudio, setPlayingAudio] = useState<AudioBufferSourceNode | null>(null);
@@ -64,6 +65,7 @@ const SavedNews: React.FC<SavedNewsProps> = ({ userName }) => {
                    article={article} 
                    onPlayAudio={handlePlayAudio}
                    userName={userName}
+                   onClick={() => onArticleSelect(article)}
                 />
              ))}
           </div>

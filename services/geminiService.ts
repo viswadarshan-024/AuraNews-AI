@@ -25,6 +25,8 @@ export const fetchNewsArticles = async (
     
     For the top 5 most relevant articles, provide a summary translated into ${targetLanguage}.
     
+    IMPORTANT: Inspect the search results metadata carefully. If an image URL (like og:image, or a news thumbnail) is available in the source, include it in the IMAGE_URL field. If no valid image URL is found, write "N/A".
+    
     You MUST return the result as a STRICT Markdown list where each item follows this exact format.
     DO NOT include any preamble or conversational text before the list.
     
@@ -32,7 +34,8 @@ export const fetchNewsArticles = async (
     TITLE: [Insert Title Here]
     SOURCE: [Insert Source Name]
     DATE: [Insert Date/Time]
-    URL: [Insert Link URL if available from grounding, otherwise put "N/A"]
+    URL: [Insert the specific link URL to the source article. If not found, write "N/A"]
+    IMAGE_URL: [Insert actual image URL from source if found, otherwise "N/A"]
     SUMMARY: [Insert a comprehensive summary in ${targetLanguage}]
     CATEGORY: [Insert the closest category from the request]
     ### END
@@ -80,7 +83,8 @@ export const fetchDailyBriefing = async (
     TITLE: [Headline]
     SOURCE: [Source]
     DATE: [Time]
-    URL: [Link or N/A]
+    URL: [Insert the specific link URL to the source article. If not found, write "N/A"]
+    IMAGE_URL: [Insert actual image URL from source if found, otherwise "N/A"]
     SUMMARY: [Concise 2-sentence summary in ${targetLanguage}]
     CATEGORY: [Category]
     ### END
@@ -115,26 +119,43 @@ const parseArticles = (text: string, grounding: any, targetLanguage: Language, d
       const titleMatch = chunk.match(/TITLE:\s*(.+)/);
       const sourceMatch = chunk.match(/SOURCE:\s*(.+)/);
       const dateMatch = chunk.match(/DATE:\s*(.+)/);
+      const urlMatch = chunk.match(/URL:\s*(.+)/);
+      const imageMatch = chunk.match(/IMAGE_URL:\s*(.+)/);
       const summaryMatch = chunk.match(/SUMMARY:\s*([\s\S]+?)(?=CATEGORY:)/);
       const categoryMatch = chunk.match(/CATEGORY:\s*(.+)/);
       
-      let url = '';
-      if (grounding?.groundingChunks) {
+      let url = urlMatch ? urlMatch[1].trim() : '';
+      let imageUrl = imageMatch ? imageMatch[1].trim() : 'N/A';
+      
+      // Fallback to grounding chunks if text URL is N/A or empty
+      if ((!url || url === 'N/A') && grounding?.groundingChunks) {
+         // Attempt to find a relevant link in chunks (heuristic)
          const chunkIndex = index % grounding.groundingChunks.length;
          url = grounding.groundingChunks[chunkIndex]?.web?.uri || '';
       }
 
       if (titleMatch && summaryMatch) {
+        const title = titleMatch[1].trim();
+        const category = (categoryMatch ? categoryMatch[1].trim() : defaultCategory) as NewsCategory;
+        
+        // Strategy: 
+        // 1. Use extracted Image URL if valid and not N/A.
+        // 2. If N/A, the UI component will handle the fallback to a category-specific stock photo.
+        if (imageUrl === 'N/A' || imageUrl.length < 10) {
+            imageUrl = ''; // Reset to empty so UI handles fallback
+        }
+
         articles.push({
           id: `news-${Date.now()}-${index}`,
-          title: titleMatch[1].trim(),
+          title: title,
           source: sourceMatch ? sourceMatch[1].trim() : 'Unknown Source',
           date: dateMatch ? dateMatch[1].trim() : new Date().toLocaleDateString(),
-          url: url,
+          url: url === 'N/A' ? '' : url,
+          imageUrl: imageUrl,
           summary: summaryMatch[1].trim(),
           originalLanguage: 'English',
           targetLanguage,
-          category: (categoryMatch ? categoryMatch[1].trim() : defaultCategory) as NewsCategory
+          category: category
         });
       }
     });

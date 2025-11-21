@@ -6,9 +6,10 @@ import { Play, Pause, SkipForward, Sparkles, Loader2, ChevronDown, ChevronUp, Vo
 
 interface DailyBriefingProps {
   prefs: UserPreferences;
+  onArticleSelect: (article: NewsArticle) => void;
 }
 
-const DailyBriefing: React.FC<DailyBriefingProps> = ({ prefs }) => {
+const DailyBriefing: React.FC<DailyBriefingProps> = ({ prefs, onArticleSelect }) => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number>(-1);
@@ -174,9 +175,10 @@ const DailyBriefing: React.FC<DailyBriefingProps> = ({ prefs }) => {
             return (
               <div 
                 key={article.id}
-                className={`bg-white rounded-2xl p-5 shadow-sm border transition-all duration-300 ${
+                className={`bg-white rounded-2xl p-5 shadow-sm border transition-all duration-300 cursor-pointer ${
                   isPlaying ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-indigo-100' : 'border-slate-100 hover:border-indigo-200'
                 }`}
+                onClick={() => onArticleSelect(article)}
               >
                 <div className="flex justify-between items-start gap-4">
                    <div className="flex-1">
@@ -189,7 +191,7 @@ const DailyBriefing: React.FC<DailyBriefingProps> = ({ prefs }) => {
                    </div>
                    
                    <button
-                     onClick={() => handlePlayItem(article, index)}
+                     onClick={(e) => { e.stopPropagation(); handlePlayItem(article, index); }}
                      disabled={loadingAudio && !isPlaying}
                      className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition ${
                         isPlaying 
@@ -224,7 +226,7 @@ const DailyBriefing: React.FC<DailyBriefingProps> = ({ prefs }) => {
                 {/* Action Footer */}
                 <div className="mt-3 flex items-center gap-2">
                    <button 
-                     onClick={() => handleExplain(article)}
+                     onClick={(e) => { e.stopPropagation(); handleExplain(article); }}
                      className="text-xs font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition"
                    >
                       {isExpanded ? (

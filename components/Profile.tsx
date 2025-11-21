@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPreferences, Language, NewsCategory } from '../types';
-import { SUPPORTED_LANGUAGES, CATEGORIES } from '../constants';
-import { User, Save, Check, LogOut } from 'lucide-react';
+import { SUPPORTED_LANGUAGES, CATEGORIES, NEWS_CHANNELS } from '../constants';
+import { User, Save, Check, LogOut, Settings } from 'lucide-react';
+import { getFollowedChannels } from '../services/interactionService';
 
 interface ProfileProps {
   prefs: UserPreferences;
@@ -14,6 +15,11 @@ const Profile: React.FC<ProfileProps> = ({ prefs, onUpdate, onLogout }) => {
   const [languages, setLanguages] = useState<Language[]>(prefs.languages);
   const [categories, setCategories] = useState<NewsCategory[]>(prefs.categories);
   const [isSaved, setIsSaved] = useState(false);
+  const [followedIds, setFollowedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setFollowedIds(getFollowedChannels());
+  }, []);
 
   const handleSave = () => {
     onUpdate({ ...prefs, name, languages, categories });
@@ -33,19 +39,24 @@ const Profile: React.FC<ProfileProps> = ({ prefs, onUpdate, onLogout }) => {
     );
   };
 
+  const followedChannels = NEWS_CHANNELS.filter(c => followedIds.includes(c.id));
+
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
         <div className="bg-white border-b border-slate-100">
-            <div className="max-w-2xl mx-auto px-6 py-8">
-                <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-                <p className="text-slate-500">Manage your preferences</p>
+            <div className="max-w-2xl mx-auto px-6 py-8 flex justify-between items-center">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
+                    <p className="text-slate-500">Manage your preferences</p>
+                </div>
+                <Settings className="text-slate-300 w-6 h-6" />
             </div>
         </div>
 
         <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
             {/* Identity Card */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
-                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 border-4 border-white shadow-md">
                     <User className="w-8 h-8" />
                 </div>
                 <div className="flex-1">
@@ -58,6 +69,23 @@ const Profile: React.FC<ProfileProps> = ({ prefs, onUpdate, onLogout }) => {
                     />
                 </div>
             </div>
+
+            {/* Followed Channels */}
+            {followedChannels.length > 0 && (
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Following</h3>
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                        {followedChannels.map(channel => (
+                            <div key={channel.id} className="flex flex-col items-center gap-2 min-w-[72px]">
+                                <div className="w-14 h-14 rounded-full border border-slate-100 p-0.5">
+                                    <img src={channel.logo} alt={channel.name} className="w-full h-full rounded-full object-cover" />
+                                </div>
+                                <span className="text-[10px] font-medium text-slate-600 text-center leading-tight line-clamp-2">{channel.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Languages */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">

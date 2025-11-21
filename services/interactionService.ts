@@ -1,6 +1,7 @@
 import { NewsArticle, Comment } from '../types';
 
 const STORAGE_KEY = 'auranews_interactions';
+const CHANNELS_KEY = 'auranews_followed_channels';
 
 interface InteractionData {
   [articleId: string]: {
@@ -24,6 +25,34 @@ const getData = (): InteractionData => {
 const saveData = (data: InteractionData) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
+
+// --- Channel Logic ---
+export const getFollowedChannels = (): string[] => {
+    try {
+        const raw = localStorage.getItem(CHANNELS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+};
+
+export const toggleFollowChannel = (channelId: string): boolean => {
+    const current = getFollowedChannels();
+    let updated: string[];
+    let isFollowing = false;
+
+    if (current.includes(channelId)) {
+        updated = current.filter(id => id !== channelId);
+        isFollowing = false;
+    } else {
+        updated = [...current, channelId];
+        isFollowing = true;
+    }
+    
+    localStorage.setItem(CHANNELS_KEY, JSON.stringify(updated));
+    return isFollowing;
+};
+// ---------------------
 
 // Helper to generate a consistent ID based on title (handling Unicode)
 export const getStableId = (article: NewsArticle) => {

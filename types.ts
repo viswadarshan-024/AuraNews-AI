@@ -3,7 +3,10 @@ export enum Language {
   TAMIL = 'Tamil',
   MALAYALAM = 'Malayalam',
   TELUGU = 'Telugu',
-  HINDI = 'Hindi'
+  HINDI = 'Hindi',
+  GUJARATI = 'Gujarati',
+  KANNADA = 'Kannada',
+  MARATHI = 'Marathi'
 }
 
 export enum NewsCategory {
@@ -37,6 +40,7 @@ export interface NewsArticle {
   source: string;
   date: string;
   url?: string;
+  imageUrl?: string;
   originalLanguage: string;
   targetLanguage: Language;
   category: NewsCategory;
@@ -45,6 +49,15 @@ export interface NewsArticle {
   likeCount?: number;
   isSaved?: boolean;
   comments?: Comment[];
+}
+
+export interface Channel {
+  id: string;
+  name: string;
+  logo: string;
+  category: string;
+  language: string;
+  description: string;
 }
 
 export interface AudioChunk {
